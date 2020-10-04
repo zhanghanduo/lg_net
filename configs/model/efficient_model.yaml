@@ -1,0 +1,14 @@
+# @package _group_
+class_name: lg_net.models.simple_model.Net
+params:
+encoder:
+  class_name: lg_net.models.encoders.efficientnet_encoder.EfficientNetEncoder
+  params:
+    arch: efficientnet-b1
+    freeze: True
+    freeze_until_layer:
+decoder:
+  class_name: lg_net.models.decoders.basic_decoder.BasicDecoder
+  params:
+    pool_output_size: 2
+    n_classes: 10

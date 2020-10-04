@@ -1,0 +1,15 @@
+# @package _group_
+model:
+  backbone:
+    class_name: torchvision.models.detection.fasterrcnn_resnet50_fpn
+    params:
+      pretrained: True
+      num_classes: 91
+      pretrained_backbone: True
+#      trainable_backbone_layers: 5
+
+
+  head:
+    class_name: torchvision.models.detection.faster_rcnn.FastRCNNPredictor
+    params:
+      num_classes: 2

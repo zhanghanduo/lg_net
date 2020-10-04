@@ -1,0 +1,10 @@
+data:
+  root_dataset: "./data/ADE20K_2016_07_26"
+  list_train: "./data/ADE20K_2016_07_26/training.odgt"
+  list_val: "./data/ADE20K_2016_07_26/validation.odgt"
+  num_class: 150
+  imgSizes: (300, 375, 450, 525, 600)
+  imgMaxSize: 1000
+  padding_constant: 32
+  segm_downsampling_rate: 4
+  random_flip: True

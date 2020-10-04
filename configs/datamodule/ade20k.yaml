@@ -1,0 +1,23 @@
+# @package _group_
+path: f:/data/ADE20K_2016_07_26
+name: cocostuffmodify
+root: "./data/ADE20K_2016_07_26/"
+list_train: "./data/ADE20K_2016_07_26/training.odgt"
+list_val: "./data/ADE20K_2016_07_26/validation.odgt"
+#data_read: lg_net.
+max_sample: -1
+start_idx: -1
+end_idx: -1
+n_folds: 3
+fold_n: 0
+class_name: lg_net.datasets.ade_dataset.TrainDataset
+n_classes: 150
+imgSizes: (300, 375, 450, 525, 600)
+imgMaxSize: 1000
+padding_constant: 32
+segm_downsampling_rate: 4
+ignore_label: 255
+labels_to_ohe: False
+num_workers: 8
+batch_size: 16
+pin_memory: True

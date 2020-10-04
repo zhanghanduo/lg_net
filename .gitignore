@@ -1,0 +1,7 @@
+.idea/
+.vscode/
+*.pyc
+runs/
+*.0
+outputs/
+logs/

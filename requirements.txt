@@ -1,0 +1,15 @@
+torch~=1.6.0
+torchvision~=0.7.0
+pillow~=7.2.0
+numpy~=1.18.5
+pycocotools
+opencv-python~=4.4.0.40
+scipy
+pytorch-lightning >= 0.8.5
+neptune-client
+hydra-core
+matplotlib~=3.3.1
+omegaconf~=2.0.2
+albumentations~=0.4.6
+pandas~=1.1.0
+scikit-learn~=0.23.2

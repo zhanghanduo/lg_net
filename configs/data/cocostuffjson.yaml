@@ -1,0 +1,15 @@
+dataset:
+    name: cocostuffmodify
+#    ROOT: /media/handuo/Data of Handuo/dataset/coco
+    root: /mnt/4102422c-af52-4b55-988f-df7544b35598/dataset/coco
+    type: json
+    labels: ./datasets/coco_stuff/labels.txt
+    n_classes: 182
+    ignore_label: 255
+    scales: [0.5, 0.75, 1.0, 1.25, 1.5]
+    split:
+        train: train
+        val: val
+        test: ???
+
+

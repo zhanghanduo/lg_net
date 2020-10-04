@@ -1,0 +1,24 @@
+from .. import TorchVisionDataset
+
+
+class CIFAR10(TorchVisionDataset):
+    auto_construct = False
+
+    def __init__(self, *args, **kwargs):
+        """
+        Note both "val" and "test" splits map to "test"
+        """
+
+        super().__init__(*args, **kwargs)
+
+        self.dataset = self.torchvision_constructor(
+            root=self.root,
+            train=self.split,
+            transform=None,
+            target_transform=None,
+            download=True,
+        )
+
+
+class CIFAR100(CIFAR10):
+    pass

@@ -1,0 +1,14 @@
+# @package _group_
+path: f:/data/coco
+name: cocostuffmodify
+root: ./data/coco
+split: train
+n_folds: 3
+fold_n: 0
+class_name: lg_net.datasets.coco_stuff.CocoStuffModify
+n_classes: 19
+ignore_label: 255
+labels_to_ohe: False
+num_workers: 0
+batch_size: 32
+pin_memory: True
