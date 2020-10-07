@@ -1,17 +1,16 @@
 defaults:
-#  - data: ade20k
   - datamodule: ade20k
   - trainer: default_trainer
   - training: default_training
-  - logging: tensorboard
-  - optimizer: sgd
-  - scheduler: plateau
-  - model: simple_model
-  - callbacks: callbacks
+#  - logging: tensorboard
+#  - optimizer: sgd
+#  - scheduler: plateau
+#  - model: simple_model
+#  - callbacks: callbacks
   - augmentation: basic_augs
-  - loss: cross_entropy
-  - metric: accuracy
-  - hydra/hydra_logging: colorlog
+#  - loss: cross_entropy
+#  - metric: accuracy
+  - hydra/hydra_logging: default
   - hydra/job_logging: disabled
 
 pretty_print: True

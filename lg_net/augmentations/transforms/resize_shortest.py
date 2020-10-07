@@ -56,7 +56,7 @@ class ResizeShortest(DualTransform, ABC):
         length : int
             Length in pixels of the resulting shortest side of the image.
         """
-        logger.warn(f"Use A.SmallestMaxSize instead. This is deprecated.")
+        logger.warning(f"Use A.SmallestMaxSize instead. This is deprecated.")
 
         super().__init__(always_apply, p)
         self.length = length

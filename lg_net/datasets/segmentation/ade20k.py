@@ -1,3 +1,4 @@
+from abc import ABC
 import cv2
 import numpy as np
 import zipfile
@@ -6,7 +7,7 @@ import glob
 from .. import Dataset
 
 
-class ADE20K(Dataset):
+class ADE20K(Dataset, ABC):
 
     def __init__(self, root: str, split="train", transform=None, **kwargs):
         super().__init__(split=split, transform=transform)

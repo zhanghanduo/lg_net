@@ -223,7 +223,7 @@ def set_seed(seed: int = 666) -> None:
 #     shutil.copy2(os.path.join(hydra.utils.get_original_cwd(), 'train.py'), os.path.join(os.getcwd(), 'code'))
 
 def save_useful_info(new_dir: str) -> None:
-    shutil.copytree(os.path.join(os.getcwd(), 'src'), os.path.join(os.getcwd(), f'{new_dir}/code/src'))
+    shutil.copytree(os.path.join(os.getcwd(), 'lg_net'), os.path.join(os.getcwd(), f'{new_dir}/code/src'))
     shutil.copy2(os.path.join(os.getcwd(), 'train.py'), os.path.join(os.getcwd(), new_dir, 'code'))
 
 

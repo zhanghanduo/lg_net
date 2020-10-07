@@ -84,7 +84,7 @@ class TrainDataset(BaseDataset):
         # classify images into two classes: 1. h > w and 2. h <= w
         self.batch_record_list = [[], []]
 
-        # override dataset length when trainig with batch_per_gpu > 1
+        # override dataset length when training with batch_per_gpu > 1
         self.cur_idx = 0
         self.if_shuffled = False
 
@@ -160,10 +160,14 @@ class TrainDataset(BaseDataset):
 
             # load image and label
             image_path = os.path.join(self.root_dataset, this_record['fpath_img'])
+            print(image_path)
             segm_path = os.path.join(self.root_dataset, this_record['fpath_segm'])
 
             img = cv2.imread(image_path, cv2.IMREAD_COLOR)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            img = (
+                    img.astype(np.float32) / 255
+            )  # Images are supposed to be float in range [0, 1]
             segm = cv2.imread(segm_path, cv2.IMREAD_GRAYSCALE)
 
             # assert (segm.mode == "L")
@@ -174,15 +178,15 @@ class TrainDataset(BaseDataset):
             img = imresize(img, (batch_widths[i], batch_heights[i]), interp='bilinear')
             segm = imresize(segm, (batch_widths[i], batch_heights[i]), interp='nearest')
 
-            # # further downsample seg label, need to avoid seg label misalignment
-            # segm_rounded_width = round2nearest_multiple(segm.size[0], self.segm_downsampling_rate)
-            # segm_rounded_height = round2nearest_multiple(segm.size[1], self.segm_downsampling_rate)
-            # segm_rounded = Image.new('L', (segm_rounded_width, segm_rounded_height), 0)
-            # segm_rounded.paste(segm, (0, 0))
-            # segm = imresize(
-            #     segm_rounded,
-            #     (segm_rounded.size[0] // self.segm_downsampling_rate, segm_rounded.size[1] //
-            #      self.segm_downsampling_rate), interp='nearest')
+            # further downsample seg label, need to avoid seg label misalignment
+            segm_rounded_width = round2nearest_multiple(segm.size[0], self.segm_downsampling_rate)
+            segm_rounded_height = round2nearest_multiple(segm.size[1], self.segm_downsampling_rate)
+            segm_rounded = Image.new('L', (segm_rounded_width, segm_rounded_height), 0)
+            segm_rounded.paste(segm, (0, 0))
+            segm = imresize(
+                segm_rounded,
+                (segm_rounded.size[0] // self.segm_downsampling_rate, segm_rounded.size[1] //
+                 self.segm_downsampling_rate), interp='nearest')
 
             transformed = self.transform(image=img, mask=segm)
 

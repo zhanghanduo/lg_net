@@ -1,13 +1,13 @@
 # @package _group_
-training:
-    lr: 0.0001
-    metric: ${metric.metric_name}
-    mode: "max"
-    seed: 666
-    debug: True
-    n_classes: 10
-    lightning_module_name: lg_net.lightning_classes.lightning_image_classification.LitImageClassification
-    data_module_name: lg_net.lightning_classes.datamodule_ade20k.ADE20kDataModule
+#training:
+lr: 0.0001
+metric: ${metric.metric_name}
+mode: "max"
+seed: 777
+debug: True
+n_classes: 10
+lightning_module_name: lg_net.lightning_classes.lightning_image_classification.LitImageClassification
+data_module_name: lg_net.lightning_classes.datamodule_ade20k.ADE20kDataModule
 #    data_module_name: lg_net.lightning_classes.datamodule_imagenette.ImagenetteDataModule
 
 

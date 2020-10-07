@@ -1,5 +1,6 @@
 import glob
 import os
+from abc import ABC
 from typing import Dict
 
 import pytorch_lightning as pl
@@ -20,7 +21,7 @@ class ADE20kDataModule(pl.LightningDataModule):
         self.padding_constant = self.cfg.datamodule.padding_constant
         self.root_dataset = self.cfg.datamodule.root
         self.list_train = self.cfg.datamodule.list_train
-        self.list_val = self.cfg.datamodule.lit_val
+        self.list_val = self.cfg.datamodule.list_val
 
     def prepare_data(self):
         pass
@@ -58,8 +59,8 @@ class ADE20kDataModule(pl.LightningDataModule):
         if self.cfg.training.debug:
             train_labels = train_labels[:1000]
             train_images = train_images[:1000]
-            val_labels = val_labels[:1000]
-            val_images = val_images[:1000]
+            val_labels = val_labels[:100]
+            val_images = val_images[:100]
 
         # train dataset
         dataset_class = load_obj(self.cfg.datamodule.class_name)

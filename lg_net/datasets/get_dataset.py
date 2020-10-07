@@ -41,6 +41,10 @@ def load_augs(cfg: DictConfig) -> A.Compose:
 
     return A.Compose(augs)
 
+    # return A.Compose(augs, additional_targets={
+    #     'image1': 'image', 'mask1': 'mask'
+    # })
+
 
 def get_training_datasets(cfg: DictConfig) -> Dict:
     """
