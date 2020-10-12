@@ -10,7 +10,7 @@ from omegaconf import DictConfig, OmegaConf
 from albumentations.core.composition import Compose
 from lg_net.utils.utils import set_seed, flatten_omegaconf, load_obj, save_useful_info
 from lg_net.datasets.get_dataset import load_augs
-from lg_net.augmentations.transforms import Skew
+from lg_net.augmentations.transforms import Skew_cv2
 import matplotlib.pyplot as plt
 from icecream import ic
 
@@ -132,7 +132,7 @@ class Dataset:
         #     batch_width // self.segm_downsampling_rate).long()
 
         f, axarr = plt.subplots(self.batch_per_gpu, 4, figsize=(30, 25))
-        skew_op = Skew()
+        skew_op = Skew_cv2()
 
         for i in range(self.batch_per_gpu):
             this_record = batch_records[i]
@@ -141,15 +141,12 @@ class Dataset:
             image_path = os.path.join(self.root_dataset, this_record['fpath_img'])
             segm_path = os.path.join(self.root_dataset, this_record['fpath_segm'])
 
-            # img = cv2.imread(image_path, cv2.IMREAD_COLOR)
-            # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            img = cv2.imread(image_path, cv2.IMREAD_COLOR)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             # img = (
             #         img.astype(np.float32) / 255
             # )  # Images are supposed to be float in range [0, 1]
-            # segm = cv2.imread(segm_path, cv2.IMREAD_GRAYSCALE)
-
-            img = Image.open(image_path)
-            segm = Image.open(segm_path)
+            segm = cv2.imread(segm_path, cv2.IMREAD_GRAYSCALE)
 
             # note that each sample within a mini batch has different scale param
             # img = imresize(img, (batch_widths[i], batch_heights[i]), interp='bilinear')
@@ -172,18 +169,11 @@ class Dataset:
             # collated_img_and_mask = [[img, segm]]
 
             augmented_imgs, ls = skew_op.perform_operation([img], [segm])
-            # p = Augmentor.DataPipeline([img], labels=[segm])
-            # p.skew_left_right(1.0)
-            # augmented_imgs, ls = p.sample(1)
-            warped_img = np.asarray(augmented_imgs[0])
-            warped_label = np.asarray(ls[0])
-            orig_img = np.asarray(img)
-            orig_label = np.asarray(segm)
-            transformed = self.transform(image=orig_img,
-                                         mask=orig_label)
+            transformed = self.transform(image=img,
+                                         mask=segm)
 
-            transformed2 = self.transform2(image=warped_img,
-                                           mask=warped_label)
+            transformed2 = self.transform2(image=augmented_imgs[0],
+                                           mask=ls[0])
 
             axarr[i, 0].imshow(transformed['image'])
             axarr[i, 1].imshow(transformed['mask'])
@@ -192,7 +182,6 @@ class Dataset:
             # put into batch arrays
             # batch_images[i][:, :img.shape[1], :img.shape[2]] = img
             # batch_segms[i][:segm.shape[0], :segm.shape[1]] = segm
-
 
         plt.show()
 
