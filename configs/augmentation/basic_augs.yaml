@@ -1,9 +1,23 @@
 # @package _group_
 train:
   augs:
-    - class_name: albumentations.HorizontalFlip
+    - class_name: albumentations.Resize
       params:
-        p: 0.6
+        height: 512
+        width: 512
+#    - class_name: albumentations.Normalize
+#      params:
+#        mean: [ 0.485, 0.456, 0.406 ]
+#        std: [ 0.229, 0.224, 0.225 ]
+#        p: 1.0
+#    - class_name: albumentations.pytorch.transforms.ToTensorV2
+#      params:
+#        p: 1.0
+  siamese:
+    - class_name: albumentations.Resize
+      params:
+          height: 512
+          width: 512
     - class_name: albumentations.Cutout
       params:
         num_holes: 3
@@ -16,31 +30,40 @@ train:
         shift_limit: 0.0625
         scale_limit: 0.1
         rotate_limit: 10
-    - class_name: albumentations.Resize
+    - class_name: albumentations.RandomBrightnessContrast
       params:
-        height: 256
-        width: 256
-    - class_name: albumentations.RGBShift
+        p: 1.0
+    - class_name: albumentations.OneOf
       params:
-        p: 0.5
-    - class_name: albumentations.HueSaturationValue
+        - class_name: albumentations.RGBShift
+          params:
+            p: 1.0
+        - class_name: albumentations.HueSaturationValue
+          params:
+            p: 1.0
+
+    - class_name: albumentations.HorizontalFlip
       params:
-        p: 0.5
+        p: 0.7
 #    - class_name: albumentations.Normalize
 #      params:
+#        mean: [ 0.485, 0.456, 0.406 ]
+#        std: [ 0.229, 0.224, 0.225 ]
 #        p: 1.0
-#    - class_name: albumentations.pytorch.transforms.ToTensorV2
-#      params:
-#        p: 1.0
+  #    - class_name: albumentations.pytorch.transforms.ToTensorV2
+  #      params:
+  #        p: 1.0
 valid:
   augs:
   - class_name: albumentations.Resize
     params:
-      height: 128
-      width: 128
+      height: 512
+      width: 512
   - class_name: albumentations.Normalize
     params:
-        p: 1.0
+      mean: [ 0.485, 0.456, 0.406 ]
+      std: [ 0.229, 0.224, 0.225 ]
+      p: 1.0
   - class_name: albumentations.pytorch.transforms.ToTensorV2
     params:
-        p: 1.0
+      p: 1.0

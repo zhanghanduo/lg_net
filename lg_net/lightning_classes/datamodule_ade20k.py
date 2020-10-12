@@ -11,7 +11,7 @@ from lg_net.datasets.get_dataset import load_augs
 from lg_net.utils.utils import load_obj
 
 
-class ADE20kDataModule(pl.LightningDataModule):
+class ADE20kDataModule(pl.LightningDataModule, ABC):
     def __init__(self, hparams: Dict[str, float], cfg: DictConfig):
         super().__init__()
         self.cfg = cfg

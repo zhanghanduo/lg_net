@@ -10,7 +10,7 @@ from omegaconf import DictConfig, OmegaConf
 from albumentations.core.composition import Compose
 from lg_net.utils.utils import set_seed, flatten_omegaconf, load_obj, save_useful_info
 from lg_net.datasets.get_dataset import load_augs
-import Augmentor
+from lg_net.augmentations.transforms import Skew
 import matplotlib.pyplot as plt
 from icecream import ic
 
@@ -34,12 +34,15 @@ def imresize(im, size, interp='bilinear'):
 
 class Dataset:
     def __init__(
-            self, root_dataset, odgt, transform: Compose, cfg: DictConfig
+            self, root_dataset, odgt, transform: Compose, transform_sia: Compose, cfg: DictConfig
     ):
         """
         Prepare data for ADE20K.
         Args:
             odgt: list of image names together with labels
+            transform: simple rescale transform of original input data (image and label)
+            transform_sia: siamese image pair augmentation (image and label)
+
             cfg: other dataset configurations
         """
 
@@ -74,6 +77,7 @@ class Dataset:
         print('# samples: {}'.format(self.num_sample))
         self.root_dataset = root_dataset
         self.transform = transform
+        self.transform2 = transform_sia
         # down sampling rate of segment labels
         self.segm_downsampling_rate = self.cfg.datamodule.segm_downsampling_rate
         self.batch_per_gpu = self.cfg.datamodule.batch_size
@@ -120,41 +124,15 @@ class Dataset:
         # get sub-batch candidates
         batch_records = self._get_sub_batch()
 
-        # resize all images' short edges to the chosen size
-        if isinstance(self.imgSizes, str):
-            this_short_size = np.random.choice([int(s) for s in self.imgSizes.split(',')])
-        elif isinstance(self.imgSizes, list) or isinstance(self.imgSizes, tuple):
-            this_short_size = np.random.choice(self.imgSizes)
-        else:
-            this_short_size = self.imgSizes
+        # batch_images = torch.zeros(
+        #     self.batch_per_gpu, 3, batch_height, batch_width)
+        # batch_segms = torch.zeros(
+        #     self.batch_per_gpu,
+        #     batch_height // self.segm_downsampling_rate,
+        #     batch_width // self.segm_downsampling_rate).long()
 
-        # calculate the BATCH's height and width
-        # since we concat more than one samples, the batch's h and w shall be larger than EACH sample
-        batch_widths = np.zeros(self.batch_per_gpu, np.int32)
-        batch_heights = np.zeros(self.batch_per_gpu, np.int32)
-        for i in range(self.batch_per_gpu):
-            img_height, img_width = batch_records[i]['height'], batch_records[i]['width']
-            this_scale = min(
-                this_short_size / min(img_height, img_width), self.imgMaxSize / max(img_height, img_width))
-            batch_widths[i] = img_width * this_scale
-            batch_heights[i] = img_height * this_scale
-
-        # Here we must pad both input image and segmentation map to size h' and w' so that p | h' and p | w'
-        batch_width = np.max(batch_widths)
-        batch_height = np.max(batch_heights)
-        batch_width = int(round2nearest_multiple(batch_width, self.padding_constant))
-        batch_height = int(round2nearest_multiple(batch_height, self.padding_constant))
-
-        assert self.padding_constant >= self.segm_downsampling_rate, \
-            'padding constant must be equal or large than segment downsampling rate'
-        batch_images = torch.zeros(
-            self.batch_per_gpu, 3, batch_height, batch_width)
-        batch_segms = torch.zeros(
-            self.batch_per_gpu,
-            batch_height // self.segm_downsampling_rate,
-            batch_width // self.segm_downsampling_rate).long()
-
-        f, axarr = plt.subplots(self.batch_per_gpu, 5, figsize=(30, 25))
+        f, axarr = plt.subplots(self.batch_per_gpu, 4, figsize=(30, 25))
+        skew_op = Skew()
 
         for i in range(self.batch_per_gpu):
             this_record = batch_records[i]
@@ -163,12 +141,15 @@ class Dataset:
             image_path = os.path.join(self.root_dataset, this_record['fpath_img'])
             segm_path = os.path.join(self.root_dataset, this_record['fpath_segm'])
 
-            img = cv2.imread(image_path, cv2.IMREAD_COLOR)
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            # img = cv2.imread(image_path, cv2.IMREAD_COLOR)
+            # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             # img = (
             #         img.astype(np.float32) / 255
             # )  # Images are supposed to be float in range [0, 1]
-            segm = cv2.imread(segm_path, cv2.IMREAD_GRAYSCALE)
+            # segm = cv2.imread(segm_path, cv2.IMREAD_GRAYSCALE)
+
+            img = Image.open(image_path)
+            segm = Image.open(segm_path)
 
             # note that each sample within a mini batch has different scale param
             # img = imresize(img, (batch_widths[i], batch_heights[i]), interp='bilinear')
@@ -188,35 +169,30 @@ class Dataset:
             # img = transformed['image']
             # segm = transformed['mask']
 
-            collated_img_and_mask = [[img, segm]]
-            p = Augmentor.DataPipeline(collated_img_and_mask)
-            p.skew_left_right(1.0)
-            # p.random_erasing(1.0, 0.12)
-            # augmented_imgs = p.sample(self.batch_per_gpu)
-            g = p.generator(2)
-            augmented_imgs = next(g)
+            # collated_img_and_mask = [[img, segm]]
 
-            transformed = self.transform(image=augmented_imgs[0][0],
-                                         mask=augmented_imgs[0][1])
-            transformed2 = self.transform(image=augmented_imgs[1][0],
-                                          mask=augmented_imgs[1][1])
+            augmented_imgs, ls = skew_op.perform_operation([img], [segm])
+            # p = Augmentor.DataPipeline([img], labels=[segm])
+            # p.skew_left_right(1.0)
+            # augmented_imgs, ls = p.sample(1)
+            warped_img = np.asarray(augmented_imgs[0])
+            warped_label = np.asarray(ls[0])
+            orig_img = np.asarray(img)
+            orig_label = np.asarray(segm)
+            transformed = self.transform(image=orig_img,
+                                         mask=orig_label)
 
-            axarr[i, 0].imshow(img)
-            axarr[i, 1].imshow(transformed['image'])
-            axarr[i, 2].imshow(transformed['mask'])
-            axarr[i, 3].imshow(transformed2['image'])
-            axarr[i, 4].imshow(transformed2['mask'])
+            transformed2 = self.transform2(image=warped_img,
+                                           mask=warped_label)
+
+            axarr[i, 0].imshow(transformed['image'])
+            axarr[i, 1].imshow(transformed['mask'])
+            axarr[i, 2].imshow(transformed2['image'])
+            axarr[i, 3].imshow(transformed2['mask'])
             # put into batch arrays
             # batch_images[i][:, :img.shape[1], :img.shape[2]] = img
             # batch_segms[i][:segm.shape[0], :segm.shape[1]] = segm
 
-        # p = Augmentor.DataPipeline(collated_img_and_mask)
-        # p.flip_left_right(.5)
-        # p.skew_left_right(1.0)
-        # # p.random_erasing(1.0, 0.12)
-        # # augmented_imgs = p.sample(self.batch_per_gpu)
-        # g = p.generator(self.batch_per_gpu)
-        # augmented_imgs = next(g)
 
         plt.show()
 
@@ -234,9 +210,9 @@ def run(cfg: DictConfig, new_dir: str) -> None:
     list_train = cfg.datamodule.list_train
     list_val = cfg.datamodule.list_val
     train_augs = load_augs(cfg['augmentation']['train']['augs'])
-    valid_augs = load_augs(cfg['augmentation']['valid']['augs'])
+    train_siamese_augs = load_augs(cfg['augmentation']['train']['siamese'])
 
-    train_dataset = Dataset(root_dataset, list_train, train_augs, cfg)
+    train_dataset = Dataset(root_dataset, list_train, train_augs, train_siamese_augs, cfg)
 
     train_dataset.get_item(20)
 
