@@ -5,6 +5,25 @@ import cv2
 from PIL import Image
 
 
+def persp_apply(mat, pts):
+    """ homography (perspective) transformation.
+    mat: 8-tuple (homography transform)
+    pts: numpy array
+    """
+    assert isinstance(mat, np.ndarray)
+    assert isinstance(pts, np.ndarray)
+    assert pts.shape[-1] == 2
+
+    if pts.ndim == 1:
+        pt = np.dot(pts, mat[:, :2].T).ravel() + mat[:, 2]
+        pt /= pt[2]  # homogeneous coordinates
+        return tuple(pt[:2])
+    else:
+        pt = np.dot(pts, mat[:, :2].T) + mat[:, 2]
+        pt[:, :2] /= pt[:, 2:3]  # homogeneous coordinates
+        return pt[:, :2]
+
+
 class Skew:
     """
         This class is used to perform perspective skewing on images

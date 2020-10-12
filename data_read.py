@@ -10,9 +10,10 @@ from omegaconf import DictConfig, OmegaConf
 from albumentations.core.composition import Compose
 from lg_net.utils.utils import set_seed, flatten_omegaconf, load_obj, save_useful_info
 from lg_net.datasets.get_dataset import load_augs
-from lg_net.augmentations.transforms import Skew_cv2
+from lg_net.augmentations.transforms import Skew_cv2, Skew
 import matplotlib.pyplot as plt
 from icecream import ic
+import time
 
 
 def round2nearest_multiple(x, p):
@@ -131,8 +132,24 @@ class Dataset:
         #     batch_height // self.segm_downsampling_rate,
         #     batch_width // self.segm_downsampling_rate).long()
 
-        f, axarr = plt.subplots(self.batch_per_gpu, 4, figsize=(30, 25))
+        f, axarr = plt.subplots(self.batch_per_gpu, 5, figsize=(30, 25))
+        start = time.time()
         skew_op = Skew_cv2()
+
+        # h = self.cfg['augmentation']['train']['augs']
+        h_ = self.cfg.datamodule.imgResize
+        w_ = self.cfg.datamodule.imgResize
+        # xy = np.mgrid[0:h_:8, 0:w_:8][::-1].reshape(2, h_/8 * w_/8).T
+        xg, yg = np.mgrid[0:h_:64, 0:w_:64][::-1]
+        im_key = np.zeros((h_, w_, 3), np.uint8)
+
+        def drawKeyPts(im, xg, yg, col, th):
+            for x1_, y1_ in zip(xg, yg):
+                for x_, y_ in zip(x1_, y1_):
+                    cv2.circle(im, (x_, y_), 2, col, thickness=th, lineType=8, shift=0)
+            return im
+
+        imWithCircles = drawKeyPts(im_key, xg, yg, (255, 255, 255), 3)
 
         for i in range(self.batch_per_gpu):
             this_record = batch_records[i]
@@ -168,20 +185,25 @@ class Dataset:
 
             # collated_img_and_mask = [[img, segm]]
 
-            augmented_imgs, ls = skew_op.perform_operation([img], [segm])
-            transformed = self.transform(image=img,
-                                         mask=segm)
+            transformed = self.transform(image=img, mask=segm)
+            transformed2 = self.transform2(image=img, mask=segm)
 
-            transformed2 = self.transform2(image=augmented_imgs[0],
-                                           mask=ls[0])
+
+            augmented_imgs, ls = skew_op.perform_operation(
+                [transformed2['image']], [transformed2['mask']])
 
             axarr[i, 0].imshow(transformed['image'])
             axarr[i, 1].imshow(transformed['mask'])
-            axarr[i, 2].imshow(transformed2['image'])
-            axarr[i, 3].imshow(transformed2['mask'])
+            axarr[i, 2].imshow(imWithCircles)
+            axarr[i, 3].imshow(augmented_imgs[0])
+            axarr[i, 4].imshow(ls[0])
+
             # put into batch arrays
             # batch_images[i][:, :img.shape[1], :img.shape[2]] = img
             # batch_segms[i][:segm.shape[0], :segm.shape[1]] = segm
+
+        end = time.time()
+        ic(end-start)
 
         plt.show()
 

@@ -44,7 +44,7 @@ train:
 
     - class_name: albumentations.HorizontalFlip
       params:
-        p: 0.7
+        p: 0.5
 #    - class_name: albumentations.Normalize
 #      params:
 #        mean: [ 0.485, 0.456, 0.406 ]

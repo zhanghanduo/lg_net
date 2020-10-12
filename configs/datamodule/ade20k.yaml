@@ -13,6 +13,7 @@ fold_n: 0
 class_name: lg_net.datasets.ade_dataset.TrainDataset
 n_classes: 150
 imgSizes: 300, 375, 450, 525, 600
+imgResize: 512
 imgMaxSize: 1000
 padding_constant: 32
 segm_downsampling_rate: 4
